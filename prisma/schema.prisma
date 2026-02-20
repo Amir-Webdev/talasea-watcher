@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id          Int      @id @default(1)
+  cashIrr     Float    @default(0)
+  goldGrams   Float    @default(0)
+  avgBuyPrice Float    @default(0)
+  buyFeePct   Float    @default(0.003)
+  sellFeePct  Float    @default(0.003)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model EngineSetting {
+  id                    Int      @id @default(1)
+  pollIntervalMs        Int      @default(60000)
+  predictionHorizonMin  Float    @default(30)
+  freshnessMaxMin       Float    @default(180)
+  buyThreshold          Float    @default(0.6)
+  sellThreshold         Float    @default(0.4)
+  minConfidence         Float    @default(0.2)
+  actionCooldownMin     Float    @default(8)
+  historyRetentionHours Float    @default(720)
+  maxInMemoryPoints     Int      @default(50000)
+  requestTimeoutMs      Int      @default(15000)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Snapshot {
+  id        BigInt   @id @default(autoincrement())
+  t         DateTime
+  goldPrice Float
+  rawPrice  String
+  fields    Json
+  signals   Signal[]
+  createdAt DateTime @default(now())
+
+  @@index([t])
+}
+
+model Signal {
+  id            BigInt    @id @default(autoincrement())
+  t             DateTime
+  horizonMin    Float
+  price         Float
+  pUp           Float
+  pDown         Float
+  confidence    Float
+  action        String
+  reason        String
+  expectedPrice Float
+  buyEdgePct    Float?
+  sellEdgePct   Float?
+  score         Float
+  stopZones     Json
+  portfolio     Json
+  inputs        Json
+  snapshotId    BigInt?
+  snapshot      Snapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+
+  @@index([t])
+  @@index([snapshotId])
+}
